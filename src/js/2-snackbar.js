@@ -1,67 +1,43 @@
-import iziToast from 'izitoast';
-import 'izitoast/dist/css/iziToast.min.css';
+import iziToast from "izitoast";
+import "izitoast/dist/css/iziToast.min.css";
+const form = document.querySelector(".form");
+console.log(form);
+const delayInput = form.querySelector('input[name="delay"]');
+console.log(delayInput);
+const radioBtn = form.querySelectorAll("input[name='state']");
+console.log(radioBtn);
+const submitButton = form.querySelector("button[type='submit']")
+console.log(submitButton);
 
-const refs = {
-  form: document.querySelector('.form'),
-  inputDelay: document.querySelector('input[name=delay]'),
-  inputsState: document.querySelectorAll('input[name=state]'),
-};
-
-iziToast.settings({
-  timeout: 5000,
-  titleColor: '#fff',
-  position: 'topRight',
-  messageColor: '#fff',
-  icon: '',
-  close: false,
-});
-
-function getDelayValue() {
-  return refs.inputDelay.value;
-}
-
-refs.form.addEventListener('submit', event => {
+form.addEventListener("submit", event => {
   event.preventDefault();
+  const delay = parseInt(delayInput.value); // Отримуємо значення затримки
+  console.log(delay);
+  const selectedState = [...radioBtn].find(radio => radio.checked); // Отримуємо обраний стан радіокнопки.
+  console.log(selectedState);
 
-  const delay = getDelayValue();
-  const stateValue = getStateValue();
+  if(delay && selectedState) {
+    const promise = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (selectedState.value === "fulfilled") {
+          resolve(delay);
+        } else {
+          reject(delay);
+        }
+      }, delay);
+    });
 
-  const promise = new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (stateValue === 'fulfilled') {
-        resolve(delay);
-      } else if (stateValue === 'rejected') {
-        reject(delay);
-      }
-    }, delay);
-    refs.inputDelay.value = '';
-  });
-
-  promise
-    .then(delay =>
-      showNotification('success', `✅ Fulfilled promise in ${delay}ms`)
-    )
-    .catch(delay =>
-      showNotification('error', `❌ Rejected promise in ${delay}ms`)
-    );
-});
-
-function getStateValue() {
-  for (const input of refs.inputsState) {
-    if (input.checked) {
-      return input.value;
-    }
+    promise.then((delay) => {
+      iziToast.success({
+        title: 'Fulfilled:',
+        message: `✅ promise in ${delay}ms`
+    });
+    }).catch((delay) => {
+      iziToast.error({
+        title: 'Rejected:',
+        message: `❌ promise in ${delay}ms`
+    });
+    });
   }
-  return 'none';
-}
-
-function showNotification(type, message) {
-  const backgroundColor = type === 'success' ? '#6ED171' : '#F67474';
-  const progressBarColor = type === 'success' ? '#00BF00' : '#F00000';
-
-  iziToast[type]({
-    message: message,
-    backgroundColor: backgroundColor,
-    progressBarColor: progressBarColor,
-  });
-}
+  
+});
